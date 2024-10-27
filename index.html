@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>D3v6 v.0.0.1</title>
+ 
+    <!-- call external d3.js framework -->
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+</head>
+
+<style>
+    circle {
+        fill: whitesmoke;
+        stroke: white;
+        stroke-width: 2px
+    }
+
+    line {
+        stroke: black;
+    }
+
+    svg {
+        background-color: rgb(220, 220, 220);
+    }
+</style>
+
+<body>
+    <div id="content">
+        <svg> </svg>
+    </div>
+
+    <script src="https://d3js.org/d3.v6.js"></script>
+    
+    <script>
+    
+    var width = window.innerWidth, height = window.innerHeight
+
+var graph = {
+    "nodes": [
+        { "id": 1 }, 
+        { "id": 2 }, 
+        { "id": 3 }, 
+        { "id": 4 }, 
+        { "id": 5 }
+    ],
+    "links": [
+        { "source": 1, "target": 2 },
+        { "source": 2, "target": 3 },
+        { "source": 3, "target": 4 },
+        { "source": 4, "target": 5 },
+        { "source": 5, "target": 1 }
+    ]
+}
+
+var svg = d3.select("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .call(d3.zoom().on("zoom", function (event) {
+        svg.attr("transform", event.transform)
+    }))
+    .append("g")
+
+var simulation = d3.forceSimulation()
+    .force("link", d3.forceLink().id(function (d) { return d.id; }).distance(100))
+    .force('charge', d3.forceManyBody().strength(-400))
+    .force('center', d3.forceCenter(width / 2, height / 2))
+
+var link = svg.selectAll(".link")
+    .data(graph.links)
+    .enter()
+    .append("line")
+
+var node = svg.selectAll(".nodes")
+    .data(graph.nodes)
+    .enter()
+    .append("circle")
+    .attr("r", 20)
+    .on("click", addNode)
+    .call(d3.drag()
+                .on("start", dragStarted)
+                .on("drag", dragged)
+                .on("end", dragEnded)
+            )
+
+
+    simulation
+        .nodes(graph.nodes)
+        .on("tick", ticked);
+
+    simulation
+        .force("link")
+        .links(graph.links)
+
+
+function ticked() {
+
+    link
+        .attr("x1", function (d) { return d.source.x; })
+        .attr("y1", function (d) { return d.source.y; })
+        .attr("x2", function (d) { return d.target.x; })
+        .attr("y2", function (d) { return d.target.y; });
+
+    node
+        .attr("transform", function (d) { return "translate(" + d.x + ", " + d.y + ")"; });
+ 
+}
+
+function dragStarted(event, d) {
+    if (!event.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+}
+
+function dragged (event, d) {
+    d.fx = event.x;
+    d.fy = event.y;
+}
+
+function dragEnded(event, d) {
+    if (!event.active) simulation.alphaTarget(0);
+    d.fx = undefined;
+    d.fy = undefined;
+}
+
+function addNode(d) {
+    var newID = graph.nodes.length + 1
+    
+    graph.nodes.push({"id": newID})
+
+    node = svg.selectAll("circle")
+        .data(graph.nodes)
+        .enter()
+        .append("circle")
+        .attr("r", 20)
+        .merge(node)
+
+    simulation.nodes(graph.nodes);
+    simulation.force("link").links(graph.links);
+    
+    //reheat the simulation
+    simulation.alpha(0.3).restart()
+}
+    
+    
+   
+    </script>
+
+   
+</body>
+
+</html>
