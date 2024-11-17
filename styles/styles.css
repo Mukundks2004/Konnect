@@ -1,0 +1,60 @@
+html, body {
+  height: 100%;
+  width: 100%;
+  font-family: Arial, sans-serif;
+  background-color: #CCCCCC;
+  justify-content: center;
+  display: flex;
+}
+
+#masterContainer {
+  display: flex;
+  
+  padding: 20px;
+  width: 90%;
+  height: 520px;
+}
+
+.box {
+  border-radius: 25px;
+  border: 2px solid #000000;
+  background-color: #999999;
+  margin: 15px;
+  overflow: hidden;
+}
+
+#config {
+  flex: 1;
+}
+
+#sketchContainer {
+  width: 550px;
+  /* flex: 1; */
+}
+
+#textEditor {
+  flex: 1;
+}
+
+.tab button {
+  background-color: #DDDDDD;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+  font-size: 17px;
+}
+
+.tab button:hover {
+  background-color: #BBBBBB;
+}
+
+.tab button.active {
+  background-color: #999999;
+}
+
+.tabcontent {
+  display: none;
+  padding: 10px;
+}
