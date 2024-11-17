@@ -24,8 +24,8 @@ class Node {
 
 let noNodes: number = 30;
 let noConn: number = 30;
-let gravityConstant: number = 1.1;
-let forceConstant: number = 1000;
+let gravityConstant: number = 1.3;
+let forceConstant: number = 800;
 let physics: boolean = true;
 let nodeCon: [number, number, number][] = [];
 let clicked: boolean = false;
@@ -46,7 +46,7 @@ export function createSketch(containerId: HTMLElement) {
             for (let i = 0; i < noNodes; i++) {
                 let x = s.random(-startDisMultiplier * s.width, startDisMultiplier * s.width);
                 let y = s.random(-startDisMultiplier * s.height, startDisMultiplier * s.height);
-                let node = new Node(s.createVector(x, y), s.random(1, 5));
+                let node = new Node(s.createVector(x, y), s.random(2, 4));
                 nodes.push(node);
             }
             closeNode = nodes[0];
@@ -55,7 +55,7 @@ export function createSketch(containerId: HTMLElement) {
                 nodeCon.push([
                     Math.round(s.random(noNodes - 1)),
                     Math.round(s.random(noNodes - 1)),
-                    s.random(100, 300)
+                    s.random(200, 400)
                 ]);
             }
             
@@ -76,12 +76,15 @@ export function createSketch(containerId: HTMLElement) {
                     ]);
                 }
             }
+
+            s.strokeWeight(2);
         };
 
         s.draw = () => {
             s.translate(s.width / 2, s.height / 2);
-            s.background(255);
+            s.background('#FFCEAE');
 
+            s.stroke('#C65102');
             nodeCon.forEach(con => {
                 let node1 = nodes[con[0]];
                 let node2 = nodes[con[1]];
@@ -90,6 +93,7 @@ export function createSketch(containerId: HTMLElement) {
 
             applyForces(nodes);
 
+            s.fill('#FFA500');
             nodes.forEach(node => {
                 node.draw(s);
                 if (physics) {

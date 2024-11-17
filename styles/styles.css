@@ -10,7 +10,7 @@ html, body {
 #masterContainer {
   display: flex;
   padding: 100px 20px 20px 20px;
-  width: 90%;
+  width: 95%;
   height: 520px;
 }
 
@@ -40,7 +40,7 @@ html, body {
   border: none;
   outline: none;
   cursor: pointer;
-  padding: 14px 16px;
+  padding: 14px 10px;
   transition: 0.3s;
   font-size: 17px;
 }
