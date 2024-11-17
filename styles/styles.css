@@ -58,3 +58,43 @@ html, body {
   display: none;
   padding: 10px;
 }
+
+/* Navbar styling */
+.navbar {
+  background-color: #333; /* Dark background for the navbar */
+  padding: 10px 20px; /* Some padding around the navbar */
+  position: fixed; /* Fix the navbar at the top of the screen */
+  top: 0;
+  width: 100%;
+  /* z-index: 1000; Ensure the navbar is always on top */
+}
+
+/* Navbar list styling */
+.navbar-list {
+  list-style: none; /* Remove default list styling */
+  margin: 0;
+  padding: 0;
+  display: flex; /* Use flexbox to arrange items horizontally */
+  justify-content: left; /* Center the list items */
+}
+
+/* Navbar item styling */
+.navbar-item {
+  margin: 0 15px; /* Space out each navbar item */
+}
+
+/* Navbar link styling */
+.navbar-link {
+  color: white; /* White text */
+  text-decoration: none; /* Remove the underline */
+  font-size: 18px; /* Adjust font size */
+  padding: 8px 15px; /* Add padding to the links */
+  border-radius: 5px; /* Optional: Round corners */
+  transition: background-color 0.3s; /* Smooth transition for hover effect */
+}
+
+/* Navbar link hover effect */
+.navbar-link:hover {
+  background-color: #575757; /* Change background color on hover */
+  color: #fff; /* Keep text color white */
+}
