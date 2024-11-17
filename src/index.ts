@@ -1,6 +1,8 @@
 import '../styles/styles.css';
-import { createSketch } from './sketch';
+// import { createSketch } from './sketch';
 
+
+import { createSketch } from './translatedForceTest';
 const sketchContainer = document.getElementById('sketchContainer');
 if (sketchContainer) {
     createSketch(sketchContainer);

@@ -21,7 +21,9 @@ export function createSketch(containerId: HTMLElement) {
 	const LINE_COLOUR = '#DD0000';
 	const BACKGROUND_COLOR = "#90EE90";
 
-	const ACCELERATION_SCALING = 1.5;
+	const ACCELERATION_SCALING = 100;
+	const DAMPENING = 0.6;
+	const MAX_ACC = 2;
 
 	const sketch = (s: p5) => {
 
@@ -66,13 +68,15 @@ export function createSketch(containerId: HTMLElement) {
 				let total_acc_y: number = 0;
 				for (var othercircle of points) {
 					if (circle !== othercircle) {
-						total_acc_x += ACCELERATION_SCALING/(circle.x - othercircle.x);
-						total_acc_y += ACCELERATION_SCALING/(circle.y - othercircle.y);
+						total_acc_x += ACCELERATION_SCALING/((circle.x - othercircle.x)**3);
+						total_acc_y += ACCELERATION_SCALING/((circle.y - othercircle.y)**3);
 					}
 				}
 
-				circle.ax = total_acc_x
-				circle.ay = total_acc_y;
+
+
+				circle.ax = MAX_ACC < total_acc_x ? MAX_ACC : total_acc_x;
+				circle.ay = MAX_ACC < total_acc_y ? MAX_ACC : total_acc_y;
 
 				circle.vx += circle.ax
 				circle.vy += circle.ay
@@ -93,6 +97,9 @@ export function createSketch(containerId: HTMLElement) {
 				{
 					circle.y = SKETCH_HEIGHT;
 				}
+
+				circle.vx *= DAMPENING;
+				circle.vy *= DAMPENING;
 
 				s.ellipse(circle.x, circle.y, CIRCLE_RADIUS, CIRCLE_RADIUS);
 			}
