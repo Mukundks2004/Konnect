@@ -3,8 +3,10 @@ import p5 from 'p5';
 interface Point {
 	x: number;
 	y: number;
-	dx: number,
-	dy: number
+	vx: number,
+	vy: number,
+	ax: number,
+	ay: number,
 }
   
 
@@ -17,7 +19,9 @@ export function createSketch(containerId: HTMLElement) {
 	
 	const LINE_WIDTH = 4;
 	const LINE_COLOUR = '#DD0000';
-	const BACKGROUND_COLOR = "#90EE90"
+	const BACKGROUND_COLOR = "#90EE90";
+
+	const ACCELERATION_SCALING = 1.5;
 
 	const sketch = (s: p5) => {
 
@@ -58,8 +62,38 @@ export function createSketch(containerId: HTMLElement) {
 			s.fill(POINT_COLOUR);
 			s.stroke(POINT_COLOUR);
 			for (var circle of points) {
-				circle.x += circle.dx;
-				circle.y += circle.dy;
+				let total_acc_x: number = 0;
+				let total_acc_y: number = 0;
+				for (var othercircle of points) {
+					if (circle !== othercircle) {
+						total_acc_x += ACCELERATION_SCALING/(circle.x - othercircle.x);
+						total_acc_y += ACCELERATION_SCALING/(circle.y - othercircle.y);
+					}
+				}
+
+				circle.ax = total_acc_x
+				circle.ay = total_acc_y;
+
+				circle.vx += circle.ax
+				circle.vy += circle.ay
+				circle.x += circle.vx;
+				circle.y += circle.vy;
+
+				if (0 > circle.x) {
+					circle.x = 0;
+				} 
+				else if (circle.x > SKETCH_WIDTH)
+				{
+					circle.x = SKETCH_WIDTH;
+				}
+				if (0 > circle.y) {
+					circle.y = 0;
+				} 
+				else if (circle.y > SKETCH_HEIGHT)
+				{
+					circle.y = SKETCH_HEIGHT;
+				}
+
 				s.ellipse(circle.x, circle.y, CIRCLE_RADIUS, CIRCLE_RADIUS);
 			}
 		};
@@ -78,9 +112,7 @@ export function createSketch(containerId: HTMLElement) {
 				}
 			}
 
-			let mydx: number = randomIntFromInterval(-3, 3);
-			let mydy: number = randomIntFromInterval(-3, 3);
-			points.push({x: s.mouseX, y: s.mouseY, dx: mydx, dy: mydy});
+			points.push({x: s.mouseX, y: s.mouseY, vx: 0, vy: 0, ax: 0, ay: 0});
             currentCircleDragged = points.slice(-1)[0];
 		}
 	
