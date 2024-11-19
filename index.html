@@ -34,27 +34,71 @@
 
             <div id="Drag" class="tabcontent">
                 <h3>Drag</h3>
-                <p>Drag nodes around and enjoy my implementation of Lombardi Spring Embedders</p>
+                <p>Drag nodes around and enjoy my implementation of Lombardi Spring Embedders. Things you can do in this mode:</p>
+                <ul>
+                    <li>Add nodes by clicking</li>
+                    <li>Drag nodes</li>
+                </ul>
             </div>
             
             <div id="Draw" class="tabcontent">
                 <h3>Draw</h3>
-                <p>Add nodes and edges</p> 
+                <p>Add nodes and edges. Things you can do in this mode:</p>
+                <ul>
+                    <li>Add nodes by clicking the canvas</li>
+                    <li>Clicking a node (without a drag) enters 'path' mode and you can click nodes in succession to trace a path</li>
+                    <li>Clicking a node while in path mode exits it</li>
+                    <li>Add edges by dragging between nodes, outside of path mode</li>
+                </ul> 
             </div>
             
             <div id="Delete" class="tabcontent">
                 <h3>Delete</h3>
-                <p>Remove nodes and edges</p>
+                <p>Remove nodes and edges. Things you can do in this mode:</p>
+                <ul>
+                    <li>Remove nodes by clicking, on mouse down</li>
+                    <li>Remove edges by removing either node or clicking the edge</li>
+                    <li>Click a button to remove everything</li>
+                    <li>Just remove all edges</li>
+                </ul>
             </div>
 
             <div id="Attributes" class="tabcontent">
                 <h3>Attributes</h3>
-                <p>Analyse your graph quantitatively</p>
+                <p>Analyse your graph quantitatively. Features this will support:</p>
+                <ul>
+                    <li>Whether the graph has cycles, and the shortest cycle (girth) (download as txt)</li>
+                    <li>Whether the graph is connected</li>
+                    <li>Whether the graph is bipartite</li>
+                    <li>Whether the graph is planar</li>
+                    <li>Whether the graph is complete</li>
+                    <li>Whether the graph is a tree</li>
+                    <li>Whether the graph is a forest</li>
+                    <li>Whether the graph is regular</li>
+                    <li>Whether the graph is hamiltonian</li>
+                    <li>Whether the graph is eulerian</li>
+                    <li># of loose nodes</li>
+                    <li>Radius (min eccentricity)</li>
+                    <li>Diameter (max eccentricity)</li>
+                    <button>Download minimum spanning tree as txt</button>
+                    <button>Download list of eccentricities as txt</button>
+                </ul>
             </div>
 
             <div id="Config" class="tabcontent">
                 <h3>Config</h3>
-                <p>Customise your experience</p>
+                <p>Customise your experience. Things you can customize:</p>
+                <ul>
+                    <li>The background hue, but not darkness or saturation</li>
+                    <li>The node hue, but not darkness or saturation</li>
+                    <li>The edge hue, but not darkness or saturation</li>
+                    <li>Node size</li>
+                    <li>Ideal edge size</li>
+                    <li>Display num (checkbox)</li>
+                    <button>Export as png</button>
+                    <button>Export as txt</button>
+                    <button>Import txt</button>
+                </ul>
             </div>
         </div>
         <div id="sketchContainer" class="box"></div>
