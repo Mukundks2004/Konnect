@@ -4,12 +4,18 @@
       "module": "ES6",
       "moduleResolution": "node",
       "outDir": "./dist",
+      "types": ["p5"], 
+      "baseUrl": ".",     
       "esModuleInterop": true,
       "strict": true,
-      "skipLibCheck": true
+      "skipLibCheck": true,
+      "paths": {
+        "*": ["node_modules/*", "src/*"]  // Adjust paths as needed
+      }
     },
     "include": [
-      "src/**/*.ts"
-    ]
+      "src/**/*.ts",
+      "src/*.ts",
+      "global.d.ts"    ]
   }
   

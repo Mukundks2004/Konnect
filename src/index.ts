@@ -3,10 +3,6 @@ import '../styles/styles.css';
 
 
 import { createSketch } from './translatedForceTest';
-const sketchContainer = document.getElementById('sketchContainer');
-if (sketchContainer) {
-    createSketch(sketchContainer);
-}
 
 const other = ace.edit("textEditor");
 
@@ -43,3 +39,8 @@ document.addEventListener("DOMContentLoaded", () => {
         defaultTab.click();
     }
 });
+
+const sketchContainer = document.getElementById('sketchContainer');
+if (sketchContainer) {
+    createSketch(sketchContainer);
+}

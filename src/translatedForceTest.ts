@@ -1,12 +1,12 @@
-import p5, { Vector } from 'p5';
+// import p5, { Vector } from 'p5';
 
 // Node class
 class Node {
-    pos: p5.Vector;
-    force: p5.Vector;
+    pos: any;
+    force: any;
     mass: number;
 
-    constructor(pos: p5.Vector, size: number) {
+    constructor(pos: any, size: number) {
         this.pos = pos;
         this.force = new p5.Vector(0, 0);
         this.mass = (2 * Math.PI * size) / 1.5;
@@ -15,13 +15,13 @@ class Node {
     // Change vel by acc, then pos by vel
     // This means we only have to update the acc and the rest follows
     update() {
-        const forceCopy: Vector = this.force.copy();
-        const vel: Vector = forceCopy.div(this.mass);
+        const forceCopy: any = this.force.copy();
+        const vel: any = forceCopy.div(this.mass);
         this.pos.add(vel);
     }
 
     // A node is just a circle
-    draw(s: p5) {
+    draw(s: any) {
         s.ellipse(this.pos.x, this.pos.y, this.mass, this.mass);
     }
 }
@@ -37,7 +37,8 @@ const SKETCH_WIDTH: number = 550;
 const DEFAULT_NODE_SIZE = 3;
 const LINE_THICKNESS = 2;
 
-const BG_COLOUR = '#FFCEAE';
+// const BG_COLOUR = '#FFCEAE';
+const BG_COLOUR = '#FF00FF';
 const NODE_BORDER_COLOUR = '#C65102';
 const NODE_COLOUR = '#FFA500';
 
@@ -45,7 +46,7 @@ const MIN_CON_LEN = 200;
 const MAX_CON_LEN = 400;
 
 export function createSketch(containerId: HTMLElement) {
-    const sketch = (s: p5) => {
+    const sketch = (s: any) => {
 
         // Initialize graph
         const nodes: Node[] = [];
@@ -119,11 +120,11 @@ export function createSketch(containerId: HTMLElement) {
             if (s.mouseX > 0 && s.mouseX < SKETCH_WIDTH && s.mouseY > 0 && s.mouseY < SKETCH_HEIGHT) {
                 clicked = true;
                 let createNewNode: boolean = true;
-                const mousePos: Vector = s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2);
+                const mousePos = s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2);
 
                 // Select node we are hovering over
                 nodes.forEach((node) => {
-                    if (Vector.dist(mousePos, node.pos) <= node.mass) {
+                    if (s.dist(mousePos.x, mousePos.y, node.pos.x, node.pos.y) <= node.mass) {
                         // This shouldn't bug as long as nodes don't overlap
                         selectedNode = node;
                         createNewNode = false;
@@ -149,16 +150,16 @@ export function createSketch(containerId: HTMLElement) {
 
             // Bring each node closer to the middle
             nodes.forEach(node => {
-                const gravity: Vector = node.pos.copy().mult(-1).mult(GRAVITY_CONST);
+                const gravity = node.pos.copy().mult(-1).mult(GRAVITY_CONST);
                 node.force = gravity;
             });
 
             // Every node is repelled by every other node
             for (let i = 0; i < nodes.length; i++) {
                 for (let j = i + 1; j < nodes.length; j++) {
-                    const pos: Vector = nodes[i].pos;
-                    const dir: Vector = nodes[j].pos.copy().sub(pos);
-                    const force: Vector = dir.div(dir.mag() * dir.mag());
+                    const pos = nodes[i].pos;
+                    const dir = nodes[j].pos.copy().sub(pos);
+                    const force = dir.div(dir.mag() * dir.mag());
                     force.mult(FORCE_CONSTANT);
                     nodes[i].force.add(force.copy().mult(-1));
                     nodes[j].force.add(force);
@@ -170,7 +171,7 @@ export function createSketch(containerId: HTMLElement) {
             nodeCon.forEach(con => {
                 const node1: Node = nodes[con[0]];
                 const node2: Node = nodes[con[1]];
-                const dis: Vector = node1.pos.copy().sub(node2.pos);
+                const dis = node1.pos.copy().sub(node2.pos);
                 node1.force.sub(dis);
                 node2.force.add(dis);
             });
