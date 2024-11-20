@@ -1,16 +1,15 @@
-import '../styles/styles.css';
-// import { createSketch } from './sketch';
-
-
+// import { createSketch } from './graphSketch';
 import { createSketch } from './translatedForceTest';
+import '../styles/styles.css';
 
-const other = ace.edit("textEditor");
+const editor = ace.edit("textEditor");
 
-function openCity(evt: MouseEvent, cityName: string): void {
+function changeTab(evt: MouseEvent, tabName: string): void {
     let i: number;
     let tabcontent: HTMLCollectionOf<Element>;
     let tablinks: HTMLCollectionOf<HTMLAnchorElement>;
-  
+
+    globalThis.state = tabName;
     tabcontent = document.getElementsByClassName("tabcontent") as HTMLCollectionOf<Element>;
     
     for (i = 0; i < tabcontent.length; i++) {
@@ -23,7 +22,7 @@ function openCity(evt: MouseEvent, cityName: string): void {
       tablinks[i].className = tablinks[i].className.replace(" active", "");
     }
   
-    const selectedCity = document.getElementById(cityName);
+    const selectedCity = document.getElementById(tabName);
     if (selectedCity) {
       (selectedCity as HTMLElement).style.display = "block";
     }
@@ -31,7 +30,7 @@ function openCity(evt: MouseEvent, cityName: string): void {
     (evt.currentTarget as HTMLElement).className += " active";
 }
   
-  (window as any).openCity = openCity;
+  (window as any).openCity = changeTab;
 
 document.addEventListener("DOMContentLoaded", () => {
     const defaultTab = document.querySelector(".tablinks") as HTMLElement;
