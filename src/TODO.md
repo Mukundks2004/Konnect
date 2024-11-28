@@ -10,3 +10,5 @@
     - Add edges
     - Delete edges
     - Undirected
+    - Get all nodes
+    - Get all edges

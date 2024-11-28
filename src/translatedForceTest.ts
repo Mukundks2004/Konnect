@@ -1,30 +1,6 @@
 import { Vector } from "p5";
-
-// Node class
-class Node {
-    pos: Vector;
-    force: Vector;
-    mass: number;
-
-    constructor(pos: Vector, size: number) {
-        this.pos = pos;
-        this.force = new p5.Vector(0, 0);
-        this.mass = (2 * Math.PI * size) / 1.5;
-    }
-
-    // Change vel by acc, then pos by vel
-    // This means we only have to update the acc and the rest follows
-    update() {
-        const forceCopy: Vector = this.force.copy();
-        const vel: Vector = forceCopy.div(this.mass);
-        this.pos.add(vel);
-    }
-
-    // A node is just a circle
-    draw(s: typeof p5) {
-        s.ellipse(this.pos.x, this.pos.y, this.mass, this.mass);
-    }
-}
+import { Graph } from "./graph";
+import { GraphNode } from "./graphNode";
 
 const NODE_COUNT: number = 30;
 const CONNECTION_COUNT: number = 30;
@@ -52,11 +28,10 @@ export function createSketch(containerId: HTMLElement) {
     const sketch = (s: typeof p5) => {
 
         // Initialize graph
-        const nodes: Node[] = [];
-        const nodeCon: [number, number, number][] = [];
+        const graph: Graph = new Graph();
 
         let clicked: boolean = false;
-        let selectedNode: Node | null = null;
+        let selectedNode: GraphNode | null = null;
         let selectedNodeNumber: number = -1;
         let nodeCreatedDuringThisClick: boolean = false;
 
@@ -68,17 +43,16 @@ export function createSketch(containerId: HTMLElement) {
             for (let i: number = 0; i < NODE_COUNT; i++) {
                 const x: Vector = s.random(-SKETCH_WIDTH / 4, SKETCH_WIDTH / 4);
                 const y: Vector = s.random(-SKETCH_HEIGHT / 4, SKETCH_HEIGHT / 4);
-                const node: Node = new Node(s.createVector(x, y), DEFAULT_NODE_SIZE);
-                nodes.push(node);
+                const node: GraphNode = new GraphNode(s.createVector(x, y), DEFAULT_NODE_SIZE);
+                graph.addNode(node);
             }
 
             // Generate sample connections
             for (let n: number = 0; n < CONNECTION_COUNT; n++) {
-                nodeCon.push([
+                graph.addEdge(
                     Math.round(s.random(NODE_COUNT - 1)),
                     Math.round(s.random(NODE_COUNT - 1)),
-                    s.random(MIN_CON_LEN, MAX_CON_LEN)
-                ]);
+                    s.random(MIN_CON_LEN, MAX_CON_LEN))
             }
 
             // Set stroke weight
@@ -93,12 +67,13 @@ export function createSketch(containerId: HTMLElement) {
             s.background(BG_COLOUR);
             s.stroke(NODE_BORDER_COLOUR);
 
+            const allNodes: GraphNode[] = graph.getNodes();
             // Draw all connections
-            nodeCon.forEach(con => {
-                const node1: Node = nodes[con[0]];
-                const node2: Node = nodes[con[1]];
+            graph.getEdges().forEach(edge => {
+                const node1: GraphNode = allNodes[edge.node1Id];
+                const node2: GraphNode = allNodes[edge.node2Id];
                 s.line(node1.pos.x, node1.pos.y, node2.pos.x, node2.pos.y);
-            });
+            })
 
             // Drag selected node
             if (clicked) {
@@ -118,11 +93,11 @@ export function createSketch(containerId: HTMLElement) {
             }
 
             // Move all nodes
-            adjustForceForNodes(nodes);
+            adjustForceForNodes(allNodes);
 
             // Draw all nodes
             s.fill(NODE_COLOUR);
-            nodes.forEach(node => {
+            graph.getNodes().forEach(node => {
                 node.draw(s);
                 if (DO_NODE_MOVEMENT) {
                     node.update();
@@ -142,7 +117,7 @@ export function createSketch(containerId: HTMLElement) {
                         const mousePos: Vector = s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2);
         
                         // Select node we are hovering over
-                        nodes.forEach((node, index) => {
+                        graph.getNodes().forEach((node, index) => {
                             if (s.dist(mousePos.x, mousePos.y, node.pos.x, node.pos.y) <= node.mass) {
                                 selectedNode = node;
                                 selectedNodeNumber = index;
@@ -154,9 +129,9 @@ export function createSketch(containerId: HTMLElement) {
                         // Create new node
                         if (createNewNode) {
                             nodeCreatedDuringThisClick = true;
-                            selectedNode = new Node(s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2), DEFAULT_NODE_SIZE);
-                            selectedNodeNumber = nodes.length;
-                            nodes.push(selectedNode);
+                            selectedNode = new GraphNode(s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2), DEFAULT_NODE_SIZE);
+                            selectedNodeNumber = graph.getNodes().length;
+                            graph.addNode(selectedNode);
                         }
                 }
             }
@@ -170,13 +145,13 @@ export function createSketch(containerId: HTMLElement) {
 
             switch (globalThis.state) {
                 case DRAW_MODE:
-                    let endNode: Node | null = null;
+                    let endNode: GraphNode | null = null;
                     const mousePos: Vector = s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2);
 
-                    nodes.forEach((node, index) => {
+                    graph.getNodes().forEach((node, index) => {
                         if (selectedNodeNumber !== index && s.dist(mousePos.x, mousePos.y, node.pos.x, node.pos.y) <= node.mass) {
                             endNode = node;
-                            nodeCon.push([selectedNodeNumber, index, s.random(MIN_CON_LEN, MAX_CON_LEN)])
+                            graph.addEdge(selectedNodeNumber, index, s.random(MIN_CON_LEN, MAX_CON_LEN))
                             return;
                         }
                     });
@@ -188,7 +163,7 @@ export function createSketch(containerId: HTMLElement) {
             selectedNodeNumber = -1;
         };
 
-        const adjustForceForNodes = (nodes: Node[]) => {
+        const adjustForceForNodes = (nodes: GraphNode[]) => {
             // There are 3 components to force:
 
             // Bring each node closer to the middle
@@ -211,13 +186,13 @@ export function createSketch(containerId: HTMLElement) {
 
             // For each connection, add to the force each node feels by the distance from one to the other
             // Nodes far apart feel a strong force together, nodes close together feel a weak force
-            nodeCon.forEach(con => {
-                const node1: Node = nodes[con[0]];
-                const node2: Node = nodes[con[1]];
+            graph.getEdges().forEach(edge => {
+                const node1: GraphNode = nodes[edge.node1Id];
+                const node2: GraphNode = nodes[edge.node2Id];
                 const dis: Vector = node1.pos.copy().sub(node2.pos);
                 node1.force.sub(dis);
                 node2.force.add(dis);
-            });
+            })
         };
     };
 
