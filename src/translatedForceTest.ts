@@ -1,12 +1,12 @@
-// import p5, { Vector } from 'p5';
+import { Vector } from "p5";
 
 // Node class
 class Node {
-    pos: any;
-    force: any;
+    pos: Vector;
+    force: Vector;
     mass: number;
 
-    constructor(pos: any, size: number) {
+    constructor(pos: Vector, size: number) {
         this.pos = pos;
         this.force = new p5.Vector(0, 0);
         this.mass = (2 * Math.PI * size) / 1.5;
@@ -15,13 +15,13 @@ class Node {
     // Change vel by acc, then pos by vel
     // This means we only have to update the acc and the rest follows
     update() {
-        const forceCopy: any = this.force.copy();
-        const vel: any = forceCopy.div(this.mass);
+        const forceCopy: Vector = this.force.copy();
+        const vel: Vector = forceCopy.div(this.mass);
         this.pos.add(vel);
     }
 
     // A node is just a circle
-    draw(s: any) {
+    draw(s: typeof p5) {
         s.ellipse(this.pos.x, this.pos.y, this.mass, this.mass);
     }
 }
@@ -34,19 +34,22 @@ const DO_NODE_MOVEMENT: boolean = true;
 const SKETCH_HEIGHT: number = 490;
 const SKETCH_WIDTH: number = 550;
 
-const DEFAULT_NODE_SIZE = 3;
-const LINE_THICKNESS = 2;
+const DEFAULT_NODE_SIZE: number = 3;
+const LINE_THICKNESS: number = 2;
 
-// const BG_COLOUR = '#FFCEAE';
-const BG_COLOUR = '#FF00FF';
-const NODE_BORDER_COLOUR = '#C65102';
-const NODE_COLOUR = '#FFA500';
+const BG_COLOUR: string = '#FFCEAE';
+const NODE_BORDER_COLOUR: string = '#C65102';
+const NODE_COLOUR: string = '#FFA500';
 
-const MIN_CON_LEN = 200;
-const MAX_CON_LEN = 400;
+const MIN_CON_LEN: number = 200;
+const MAX_CON_LEN: number = 400;
+
+const DRAG_MODE = "Drag";
+const DRAW_MODE = "Draw";
+const DELETE_MODE = "Delete";
 
 export function createSketch(containerId: HTMLElement) {
-    const sketch = (s: any) => {
+    const sketch = (s: typeof p5) => {
 
         // Initialize graph
         const nodes: Node[] = [];
@@ -54,21 +57,23 @@ export function createSketch(containerId: HTMLElement) {
 
         let clicked: boolean = false;
         let selectedNode: Node | null = null;
+        let selectedNodeNumber: number = -1;
+        let nodeCreatedDuringThisClick: boolean = false;
 
         s.setup = () => {
             // Create canvas
             s.createCanvas(SKETCH_WIDTH, SKETCH_HEIGHT);
 
             // Fill board with some nodes
-            for (let i = 0; i < NODE_COUNT; i++) {
-                const x = s.random(-SKETCH_WIDTH / 4, SKETCH_WIDTH / 4);
-                const y = s.random(-SKETCH_HEIGHT / 4, SKETCH_HEIGHT / 4);
-                const node = new Node(s.createVector(x, y), DEFAULT_NODE_SIZE);
+            for (let i: number = 0; i < NODE_COUNT; i++) {
+                const x: Vector = s.random(-SKETCH_WIDTH / 4, SKETCH_WIDTH / 4);
+                const y: Vector = s.random(-SKETCH_HEIGHT / 4, SKETCH_HEIGHT / 4);
+                const node: Node = new Node(s.createVector(x, y), DEFAULT_NODE_SIZE);
                 nodes.push(node);
             }
 
             // Generate sample connections
-            for (let n = 0; n < CONNECTION_COUNT; n++) {
+            for (let n: number = 0; n < CONNECTION_COUNT; n++) {
                 nodeCon.push([
                     Math.round(s.random(NODE_COUNT - 1)),
                     Math.round(s.random(NODE_COUNT - 1)),
@@ -95,6 +100,23 @@ export function createSketch(containerId: HTMLElement) {
                 s.line(node1.pos.x, node1.pos.y, node2.pos.x, node2.pos.y);
             });
 
+            // Drag selected node
+            if (clicked) {
+                if (selectedNode) {
+                    switch (globalThis.state) {
+                        case DRAW_MODE:
+                            if (!nodeCreatedDuringThisClick) {
+                                s.line(selectedNode.pos.x, selectedNode.pos.y, s.mouseX - SKETCH_WIDTH / 2, s.mouseY - SKETCH_HEIGHT / 2);
+                                break;
+                            }
+                        case DRAG_MODE:
+                        default:
+                            selectedNode.pos.x = s.mouseX - SKETCH_WIDTH / 2;
+                            selectedNode.pos.y = s.mouseY - SKETCH_HEIGHT / 2;
+                    }
+                }
+            }
+
             // Move all nodes
             adjustForceForNodes(nodes);
 
@@ -106,35 +128,36 @@ export function createSketch(containerId: HTMLElement) {
                     node.update();
                 }
             });
-
-            // Drag selected node
-            if (clicked) {
-                if (selectedNode) {
-                    selectedNode.pos.x = s.mouseX - SKETCH_WIDTH / 2;
-                    selectedNode.pos.y = s.mouseY - SKETCH_HEIGHT / 2;
-                }
-            }
         };
 
         s.mousePressed = () => {
             if (s.mouseX > 0 && s.mouseX < SKETCH_WIDTH && s.mouseY > 0 && s.mouseY < SKETCH_HEIGHT) {
                 clicked = true;
-                let createNewNode: boolean = true;
-                const mousePos = s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2);
-
-                // Select node we are hovering over
-                nodes.forEach((node) => {
-                    if (s.dist(mousePos.x, mousePos.y, node.pos.x, node.pos.y) <= node.mass) {
-                        // This shouldn't bug as long as nodes don't overlap
-                        selectedNode = node;
-                        createNewNode = false;
-                        return;
-                    }
-                });
-
-                // Create new node
-                if (createNewNode) {
-                    nodes.push(new Node(s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2), DEFAULT_NODE_SIZE));
+                switch (globalThis.state) {
+                    case DELETE_MODE:
+                    case DRAW_MODE:
+                    case DRAG_MODE:
+                    default:
+                        let createNewNode: boolean = true;
+                        const mousePos: Vector = s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2);
+        
+                        // Select node we are hovering over
+                        nodes.forEach((node, index) => {
+                            if (s.dist(mousePos.x, mousePos.y, node.pos.x, node.pos.y) <= node.mass) {
+                                selectedNode = node;
+                                selectedNodeNumber = index;
+                                createNewNode = false;
+                                return;
+                            }
+                        });
+        
+                        // Create new node
+                        if (createNewNode) {
+                            nodeCreatedDuringThisClick = true;
+                            selectedNode = new Node(s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2), DEFAULT_NODE_SIZE);
+                            selectedNodeNumber = nodes.length;
+                            nodes.push(selectedNode);
+                        }
                 }
             }
         };
@@ -143,6 +166,26 @@ export function createSketch(containerId: HTMLElement) {
             // On release stop dragging node
             clicked = false;
             selectedNode = null;
+            nodeCreatedDuringThisClick = false;
+
+            switch (globalThis.state) {
+                case DRAW_MODE:
+                    let endNode: Node | null = null;
+                    const mousePos: Vector = s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2);
+
+                    nodes.forEach((node, index) => {
+                        if (selectedNodeNumber !== index && s.dist(mousePos.x, mousePos.y, node.pos.x, node.pos.y) <= node.mass) {
+                            endNode = node;
+                            nodeCon.push([selectedNodeNumber, index, s.random(MIN_CON_LEN, MAX_CON_LEN)])
+                            return;
+                        }
+                    });
+                case DRAG_MODE:
+                default:
+                    break;
+            }
+
+            selectedNodeNumber = -1;
         };
 
         const adjustForceForNodes = (nodes: Node[]) => {
@@ -150,16 +193,16 @@ export function createSketch(containerId: HTMLElement) {
 
             // Bring each node closer to the middle
             nodes.forEach(node => {
-                const gravity = node.pos.copy().mult(-1).mult(GRAVITY_CONST);
+                const gravity: Vector = node.pos.copy().mult(-1).mult(GRAVITY_CONST);
                 node.force = gravity;
             });
 
             // Every node is repelled by every other node
-            for (let i = 0; i < nodes.length; i++) {
-                for (let j = i + 1; j < nodes.length; j++) {
-                    const pos = nodes[i].pos;
-                    const dir = nodes[j].pos.copy().sub(pos);
-                    const force = dir.div(dir.mag() * dir.mag());
+            for (let i: number = 0; i < nodes.length; i++) {
+                for (let j: number = i + 1; j < nodes.length; j++) {
+                    const pos: Vector = nodes[i].pos;
+                    const dir: Vector = nodes[j].pos.copy().sub(pos);
+                    const force: Vector = dir.div(dir.mag() * dir.mag());
                     force.mult(FORCE_CONSTANT);
                     nodes[i].force.add(force.copy().mult(-1));
                     nodes[j].force.add(force);
@@ -171,7 +214,7 @@ export function createSketch(containerId: HTMLElement) {
             nodeCon.forEach(con => {
                 const node1: Node = nodes[con[0]];
                 const node2: Node = nodes[con[1]];
-                const dis = node1.pos.copy().sub(node2.pos);
+                const dis: Vector = node1.pos.copy().sub(node2.pos);
                 node1.force.sub(dis);
                 node2.force.add(dis);
             });
