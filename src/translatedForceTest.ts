@@ -44,6 +44,10 @@ const NODE_COLOUR: string = '#FFA500';
 const MIN_CON_LEN: number = 200;
 const MAX_CON_LEN: number = 400;
 
+const DRAG_MODE = "Drag";
+const DRAW_MODE = "Draw";
+const DELETE_MODE = "Delete";
+
 export function createSketch(containerId: HTMLElement) {
     const sketch = (s: typeof p5) => {
 
@@ -53,6 +57,8 @@ export function createSketch(containerId: HTMLElement) {
 
         let clicked: boolean = false;
         let selectedNode: Node | null = null;
+        let selectedNodeNumber: number = -1;
+        let nodeCreatedDuringThisClick: boolean = false;
 
         s.setup = () => {
             // Create canvas
@@ -94,6 +100,23 @@ export function createSketch(containerId: HTMLElement) {
                 s.line(node1.pos.x, node1.pos.y, node2.pos.x, node2.pos.y);
             });
 
+            // Drag selected node
+            if (clicked) {
+                if (selectedNode) {
+                    switch (globalThis.state) {
+                        case DRAW_MODE:
+                            if (!nodeCreatedDuringThisClick) {
+                                s.line(selectedNode.pos.x, selectedNode.pos.y, s.mouseX - SKETCH_WIDTH / 2, s.mouseY - SKETCH_HEIGHT / 2);
+                                break;
+                            }
+                        case DRAG_MODE:
+                        default:
+                            selectedNode.pos.x = s.mouseX - SKETCH_WIDTH / 2;
+                            selectedNode.pos.y = s.mouseY - SKETCH_HEIGHT / 2;
+                    }
+                }
+            }
+
             // Move all nodes
             adjustForceForNodes(nodes);
 
@@ -105,35 +128,36 @@ export function createSketch(containerId: HTMLElement) {
                     node.update();
                 }
             });
-
-            // Drag selected node
-            if (clicked) {
-                if (selectedNode) {
-                    selectedNode.pos.x = s.mouseX - SKETCH_WIDTH / 2;
-                    selectedNode.pos.y = s.mouseY - SKETCH_HEIGHT / 2;
-                }
-            }
         };
 
         s.mousePressed = () => {
             if (s.mouseX > 0 && s.mouseX < SKETCH_WIDTH && s.mouseY > 0 && s.mouseY < SKETCH_HEIGHT) {
                 clicked = true;
-                let createNewNode: boolean = true;
-                const mousePos: Vector = s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2);
-
-                // Select node we are hovering over
-                nodes.forEach((node) => {
-                    if (s.dist(mousePos.x, mousePos.y, node.pos.x, node.pos.y) <= node.mass) {
-                        // This shouldn't bug as long as nodes don't overlap
-                        selectedNode = node;
-                        createNewNode = false;
-                        return;
-                    }
-                });
-
-                // Create new node
-                if (createNewNode) {
-                    nodes.push(new Node(s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2), DEFAULT_NODE_SIZE));
+                switch (globalThis.state) {
+                    case DELETE_MODE:
+                    case DRAW_MODE:
+                    case DRAG_MODE:
+                    default:
+                        let createNewNode: boolean = true;
+                        const mousePos: Vector = s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2);
+        
+                        // Select node we are hovering over
+                        nodes.forEach((node, index) => {
+                            if (s.dist(mousePos.x, mousePos.y, node.pos.x, node.pos.y) <= node.mass) {
+                                selectedNode = node;
+                                selectedNodeNumber = index;
+                                createNewNode = false;
+                                return;
+                            }
+                        });
+        
+                        // Create new node
+                        if (createNewNode) {
+                            nodeCreatedDuringThisClick = true;
+                            selectedNode = new Node(s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2), DEFAULT_NODE_SIZE);
+                            selectedNodeNumber = nodes.length;
+                            nodes.push(selectedNode);
+                        }
                 }
             }
         };
@@ -142,6 +166,26 @@ export function createSketch(containerId: HTMLElement) {
             // On release stop dragging node
             clicked = false;
             selectedNode = null;
+            nodeCreatedDuringThisClick = false;
+
+            switch (globalThis.state) {
+                case DRAW_MODE:
+                    let endNode: Node | null = null;
+                    const mousePos: Vector = s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2);
+
+                    nodes.forEach((node, index) => {
+                        if (selectedNodeNumber !== index && s.dist(mousePos.x, mousePos.y, node.pos.x, node.pos.y) <= node.mass) {
+                            endNode = node;
+                            nodeCon.push([selectedNodeNumber, index, s.random(MIN_CON_LEN, MAX_CON_LEN)])
+                            return;
+                        }
+                    });
+                case DRAG_MODE:
+                default:
+                    break;
+            }
+
+            selectedNodeNumber = -1;
         };
 
         const adjustForceForNodes = (nodes: Node[]) => {
