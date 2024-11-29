@@ -1,94 +1,102 @@
 import { GraphNode } from "./graphNode";
-import { Edge } from "./edge";
 
+//Optimise this entire thing, have just the edges and the adjacency list
 export class Graph {
-    private nodes: Map<number, GraphNode> = new Map();
-    private edges: Set<string> = new Set();
-    private weightedEdges: Set<Edge> = new Set();
-  
-    printAll(): void {
-        this.getEdges().forEach(element => {
-            console.log("egde", element.node1Id, element.node2Id);
-        });
-        this.getNodes().forEach(element => {
-            console.log("node", element.id);
-        });
-        console.log();
-        console.log();
-    }
+    private adjacencyList: Map<GraphNode, Set<[GraphNode, number]>> = new Map();
 
     toString(): string {
         let finalString: string = "";
         this.getNodes().forEach(node => {
             finalString += node.id + "\n";
+            this.getNeighbors(node).forEach(element => {
+                finalString += node.id + " " + element[0].id + "\n";
+            });
         });
-        this.getEdges().forEach(edge => {
-            finalString += edge.node1Id + " " + edge.node2Id + "\n";
-        });
+
         return finalString
     } 
 
     addNode(node: GraphNode): void {
         console.log("Adding node: " + node.id);
-        if (!this.nodes.has(node.id)) {
-            this.nodes.set(node.id, node);
+        if (!this.adjacencyList.has(node)) {
+            this.adjacencyList.set(node, new Set());
         }
     }
   
-    removeNode(nodeId: number): void {
-        if (this.nodes.has(nodeId)) {
-            this.nodes.delete(nodeId);
+    removeNode(node: GraphNode): void {
+        if (this.adjacencyList.has(node)) {
+            this.adjacencyList.delete(node);
     
-            this.weightedEdges.forEach((edge) => {
-                if (edge.node1Id === nodeId || edge.node2Id === nodeId) {
-                    this.weightedEdges.delete(edge);
-                }
-            });
-        }
-    }
-  
-    addEdge(node1Id: number, node2Id: number, idealLength: number): void {
-        console.log("Adding edge: " + node1Id + " to " + node2Id);
-        if (this.nodes.has(node1Id) && this.nodes.has(node2Id) && node1Id !== node2Id) {
-            const edge: Edge = { node1Id, node2Id, idealLength };
-            const sortedEdge = node1Id < node2Id ? `${node1Id}-${node2Id}` : `${node2Id}-${node1Id}`;
-        
-            if (!this.edges.has(sortedEdge)) {
-                this.edges.add(sortedEdge);
-                this.weightedEdges.add(edge);
-            }
-        }
-    }
-  
-    removeEdge(node1Id: number, node2Id: number): void {
-        if (this.nodes.has(node1Id) && this.nodes.has(node2Id)) {
-          const sortedEdge = node1Id < node2Id ? `${node1Id}-${node2Id}` : `${node2Id}-${node1Id}`;
-          
-          if (this.edges.has(sortedEdge)) {
-                this.edges.delete(sortedEdge);
-                
-                this.weightedEdges.forEach((edge) => {
-                    if ((edge.node1Id === node1Id && edge.node2Id === node2Id) || (edge.node1Id === node2Id && edge.node2Id === node1Id)) {
-                        this.weightedEdges.delete(edge);
+            for (let [key, neighbors] of this.adjacencyList) {
+                for (let neighbor of neighbors) {
+                    const [neighborNode, weight] = neighbor;
+                    
+                    if (neighborNode === node) {
+                        console.log("Deleting edge between: " + key.id + " and " + node.id);
+                        neighbors.delete(neighbor);
+                        break;
                     }
-                });
+                }
             }
         }
-      }
-  
-    getNodes(): GraphNode[] {
-        return Array.from(this.nodes.values());
     }
-    
-    getEdges(): Edge[] {
-        return Array.from(this.weightedEdges);
+  
+    addEdge(node1: GraphNode, node2: GraphNode, idealLength: number): void {
+        console.log("Adding edge: " + node1.id + " to " + node2.id);
+        this.addNode(node1);
+        this.addNode(node2);
+
+        this.adjacencyList.get(node1)?.add([node2, idealLength]);
+        this.adjacencyList.get(node2)?.add([node1, idealLength]);
+    }
+  
+    removeEdge(node1: GraphNode, node2: GraphNode): void {
+        if (this.adjacencyList.has(node1)) {
+            const neighborsFrom = this.adjacencyList.get(node1)!;
+
+            for (let neighbor of neighborsFrom) {
+                const [neighborNode, weight] = neighbor;
+                if (neighborNode === node2) {
+                    neighborsFrom.delete(neighbor);
+                    break;
+                }
+            }
+        }
+
+        if (this.adjacencyList.has(node2)) {
+            const neighborsTo = this.adjacencyList.get(node2)!;
+
+            for (let neighbor of neighborsTo) {
+                const [neighborNode, weight] = neighbor;
+                if (neighborNode === node1) {
+                    neighborsTo.delete(neighbor);
+                    break;
+                }
+            }
+        }
     }
 
-    getNodeWithId(id: number): GraphNode {
-        const node: GraphNode | undefined = this.nodes.get(id);
-        if (node === undefined) {
-            throw "Node not found: " + id;
-        }
-        return node;
+    hasEdge(node1: GraphNode, node2: GraphNode): boolean {
+        const edges = this.adjacencyList.get(node1);
+        if (edges) {
+            for (let [neighbor, _] of edges) {
+                if (neighbor === node2) {
+                    return true;
+                }
+            }
+            }
+        return false;
+      }
+
+    getNeighbors(node: GraphNode): [GraphNode, number][] {
+        return Array.from(this.adjacencyList.get(node) || []);
+    }
+  
+    getNodes(): GraphNode[] {
+        return Array.from(this.adjacencyList.keys());
+    }
+
+    getNumberOfNodes(): number {
+        return this.adjacencyList.size;
     }
 }

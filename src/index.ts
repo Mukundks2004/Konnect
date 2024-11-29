@@ -4,6 +4,19 @@ import { createSketch } from './sketch';
 const editor = ace.edit("textEditor");
 editor.setReadOnly(true);
 
+function downloadText() {
+	var content = editor.getValue();
+	
+	var blob = new Blob([content], { type: "text/plain" });
+	var link = document.createElement("a");
+	link.href = URL.createObjectURL(blob);
+	link.download = "myGraphData_" + Date.now() + ".txt";
+	
+	link.click();
+	
+	URL.revokeObjectURL(link.href);
+}
+
 const pathElement: SVGPathElement = <SVGPathElement>(<unknown>document.getElementById('iconPath'));
 
 const inputElement: HTMLInputElement | null = <HTMLInputElement>document.getElementById('colourSelector');
@@ -22,6 +35,54 @@ window.addEventListener('textUpdated', function(event: Event) {
 	editor.setValue(customEvent.detail);
 	editor.getSession().selection.clearSelection();
 });
+
+const saveImageButton = document.getElementById('saveImageButton') as HTMLButtonElement;
+
+if (saveImageButton) {
+	saveImageButton.addEventListener('click', () => {
+		window.dispatchEvent(new CustomEvent('saveImage'));
+	});
+}
+
+const downloadTextButton = document.getElementById('saveTextButton') as HTMLButtonElement;
+const clearButton = document.getElementById('clearButton') as HTMLButtonElement;
+const randomButton = document.getElementById('randomButton') as HTMLButtonElement;
+
+if (downloadTextButton) {
+	downloadTextButton.addEventListener('click', () => {
+		downloadText();
+	});
+}
+
+if (clearButton) {
+	clearButton.addEventListener('click', () => {
+		window.dispatchEvent(new CustomEvent('clearGraph'));;
+	});
+}
+
+if (randomButton) {
+	randomButton.addEventListener('click', () => {
+		window.dispatchEvent(new CustomEvent('randomGraph'));;
+	});
+}
+
+const nodeSize = document.getElementById('nodeSizeElement') as HTMLInputElement;
+const edgeSize = document.getElementById('edgeSizeElement') as HTMLInputElement;
+
+
+if (edgeSize !== null) {
+	edgeSize.onchange = function() {
+		const event: CustomEvent = new CustomEvent<string>('newEdgeSize', { detail: edgeSize.value });
+		window.dispatchEvent(event);
+  	}
+}
+
+if (nodeSize) {
+	nodeSize.onchange = function() {
+		const event: CustomEvent = new CustomEvent<string>('newNodeSize', { detail: nodeSize.value });
+		window.dispatchEvent(event);
+	};
+}
 
 function openTab(evt: MouseEvent, tabName: string): void {
     let i: number;

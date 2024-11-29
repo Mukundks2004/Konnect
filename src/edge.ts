@@ -1,5 +1,7 @@
+import { GraphNode } from "graphNode";
+
 export interface Edge {
-    node1Id: number;
-    node2Id: number;
+    node1: GraphNode;
+    node2: GraphNode;
     idealLength: number;
 }
