@@ -1,7 +1,27 @@
 import '../styles/styles.css';
-import { createSketch } from './translatedForceTest';
+import { createSketch } from './sketch';
 
-const other = ace.edit("textEditor");
+const editor = ace.edit("textEditor");
+editor.setReadOnly(true);
+
+const pathElement: SVGPathElement = <SVGPathElement>(<unknown>document.getElementById('iconPath'));
+
+const inputElement: HTMLInputElement | null = <HTMLInputElement>document.getElementById('colourSelector');
+if (inputElement !== null) {
+	inputElement.addEventListener('input', function() {
+		const event: CustomEvent = new CustomEvent<string>('colourChanged', { detail: inputElement.value });
+		if (pathElement !== null) {
+			pathElement.setAttribute('fill', inputElement.value);
+		}
+        window.dispatchEvent(event);
+	});
+}
+
+window.addEventListener('textUpdated', function(event: Event) {
+	const customEvent: CustomEvent<string> = event as CustomEvent<string>;
+	editor.setValue(customEvent.detail);
+	editor.getSession().selection.clearSelection();
+});
 
 function openTab(evt: MouseEvent, tabName: string): void {
     let i: number;
@@ -39,6 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 const sketchContainer = document.getElementById('sketchContainer');
+
 if (sketchContainer) {
     createSketch(sketchContainer);
 }

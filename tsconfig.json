@@ -1,6 +1,10 @@
 {
     "compilerOptions": {
       "target": "ES6",
+      "lib": [
+          "es2017",
+          "dom"
+      ],
       "module": "ES6",
       "moduleResolution": "node",
       "outDir": "./dist",
@@ -10,7 +14,7 @@
       "strict": true,
       "skipLibCheck": true,
       "paths": {
-        "*": ["node_modules/*", "src/*"]  // Adjust paths as needed
+        "*": ["node_modules/*", "src/*"]
       }
     },
     "include": [

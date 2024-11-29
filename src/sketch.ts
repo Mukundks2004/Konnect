@@ -2,10 +2,10 @@ import { Vector } from "p5";
 import { Graph } from "./graph";
 import { GraphNode } from "./graphNode";
 
-// const NODE_COUNT: number = 30;
-const NODE_COUNT: number = 10;
-// const CONNECTION_COUNT: number = 30;
-const CONNECTION_COUNT: number = 10;
+const NODE_COUNT: number = 30;
+// const NODE_COUNT: number = 10;
+const CONNECTION_COUNT: number = 30;
+// const CONNECTION_COUNT: number = 10;
 const GRAVITY_CONST: number = 1.3;
 const FORCE_CONSTANT: number = 800;
 const DO_NODE_MOVEMENT: boolean = true;
@@ -15,16 +15,16 @@ const SKETCH_WIDTH: number = 550;
 const DEFAULT_NODE_SIZE: number = 3;
 const LINE_THICKNESS: number = 2;
 
-const BG_COLOUR: string = '#FFCEAE';
-const NODE_BORDER_COLOUR: string = '#C65102';
-const NODE_COLOUR: string = '#FFA500';
-
 const MIN_CON_LEN: number = 200;
 const MAX_CON_LEN: number = 400;
 
 const DRAG_MODE: string = "Drag";
 const DRAW_MODE: string = "Draw";
 const DELETE_MODE: string = "Delete";
+const CONFIG_MODE: string = "Config";
+const ATTRIBUTES_MODE: string = "Attributes";
+
+const LINE_CLICK_TOLERANCE: number = 5;
 
 export function createSketch(containerId: HTMLElement) {
     const sketch = (s: typeof p5) => {
@@ -37,14 +37,22 @@ export function createSketch(containerId: HTMLElement) {
         let selectedNodeNumber: number = -1;
         let nodeCreatedDuringThisClick: boolean = false;
 
+        let NODE_COLOUR: string = '#FFA500';
+        let BG_COLOUR: string;
+        let NODE_BORDER_COLOUR: string;
+
         s.setup = () => {
             // Create canvas
             s.createCanvas(SKETCH_WIDTH, SKETCH_HEIGHT);
 
+            BG_COLOUR = adjustColor(NODE_COLOUR, 0.8);
+            NODE_BORDER_COLOUR = adjustColor(NODE_COLOUR, -0.4);
+            console.log(BG_COLOUR, NODE_BORDER_COLOUR);
+
             // Fill board with some nodes
             for (let i: number = 0; i < NODE_COUNT; i++) {
-                const x: Vector = s.random(-SKETCH_WIDTH / 4, SKETCH_WIDTH / 4);
-                const y: Vector = s.random(-SKETCH_HEIGHT / 4, SKETCH_HEIGHT / 4);
+                const x: number = s.random(-SKETCH_WIDTH / 4, SKETCH_WIDTH / 4);
+                const y: number = s.random(-SKETCH_HEIGHT / 4, SKETCH_HEIGHT / 4);
                 const node: GraphNode = new GraphNode(s.createVector(x, y), DEFAULT_NODE_SIZE);
                 graph.addNode(node);
             }
@@ -59,6 +67,7 @@ export function createSketch(containerId: HTMLElement) {
 
             // Set stroke weight
             s.strokeWeight(LINE_THICKNESS);
+            updateText(graph.toString());
         };
 
         s.draw = () => {
@@ -75,6 +84,8 @@ export function createSketch(containerId: HTMLElement) {
             if (clicked) {
                 if (selectedNode) {
                     switch (globalThis.state) {
+                        case CONFIG_MODE:
+                        case ATTRIBUTES_MODE:
                         case DRAG_MODE:
                             selectedNode.pos.x = s.mouseX - SKETCH_WIDTH / 2;
                             selectedNode.pos.y = s.mouseY - SKETCH_HEIGHT / 2;
@@ -116,25 +127,35 @@ export function createSketch(containerId: HTMLElement) {
         s.mousePressed = () => {
             if (s.mouseX > 0 && s.mouseX < SKETCH_WIDTH && s.mouseY > 0 && s.mouseY < SKETCH_HEIGHT) {
                 clicked = true;
+                const mousePos: Vector = s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2);
                 switch (globalThis.state) {
                     case DELETE_MODE:
-                        const mousePosDelete: Vector = s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2);
                         graph.getNodes().forEach((node) => {
-                            if (s.dist(mousePosDelete.x, mousePosDelete.y, node.pos.x, node.pos.y) <= node.mass / 2) {
+                            if (s.dist(mousePos.x, mousePos.y, node.pos.x, node.pos.y) <= node.mass / 2) {
                                 selectedNodeNumber = node.id;
                                 return;
                             }
                         });
                         if (selectedNodeNumber !== -1) {
                             graph.removeNode(selectedNodeNumber);
+                            updateText(graph.toString());
                             selectedNodeNumber = -1;
                         }
+
+                        graph.getEdges().forEach((edge) => {
+                            if (isMouseOnLine(graph.getNodeWithId(edge.node1Id).pos, graph.getNodeWithId(edge.node2Id).pos, mousePos)) {
+                                graph.removeEdge(edge.node1Id, edge.node2Id);
+                                updateText(graph.toString());
+                                return;
+                            }
+                        })
                         break;
                     case DRAW_MODE:
                     case DRAG_MODE:
+                    case CONFIG_MODE:
+                    case ATTRIBUTES_MODE:
                     default:
                         let createNewNode: boolean = true;
-                        const mousePos: Vector = s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2);
         
                         // Select node we are hovering over
                         graph.getNodes().forEach((node) => {
@@ -152,6 +173,7 @@ export function createSketch(containerId: HTMLElement) {
                             selectedNode = new GraphNode(s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2), DEFAULT_NODE_SIZE);
                             selectedNodeNumber = selectedNode.id;
                             graph.addNode(selectedNode);
+                            updateText(graph.toString());
                         }
                         break;
                 }
@@ -164,18 +186,21 @@ export function createSketch(containerId: HTMLElement) {
             selectedNode = null;
             nodeCreatedDuringThisClick = false;
 
+            const mousePos: Vector = s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2);
             switch (globalThis.state) {
                 case DRAW_MODE:
-                    const mousePos: Vector = s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2);
-
                     graph.getNodes().forEach((node) => {
                         if (s.dist(mousePos.x, mousePos.y, node.pos.x, node.pos.y) <= node.mass / 2 && selectedNodeNumber !== -1) {
                             console.log("edge from " + selectedNodeNumber + " to " + node.id);
-                            graph.addEdge(selectedNodeNumber, node.id, s.random(MIN_CON_LEN, MAX_CON_LEN))
+                            graph.addEdge(selectedNodeNumber, node.id, s.random(MIN_CON_LEN, MAX_CON_LEN));
+                            updateText(graph.toString());
                             return;
                         }
                     });
                 case DRAG_MODE:
+                case CONFIG_MODE:
+                case ATTRIBUTES_MODE:
+                case DELETE_MODE:
                 default:
                     break;
             }
@@ -214,8 +239,68 @@ export function createSketch(containerId: HTMLElement) {
                 node2.force.add(dis);
             })
         };
+
+        function isMouseOnLine(firstPoint: Vector, secondPoint: Vector, mousePoint: Vector) {
+            const d: number = distToLine(firstPoint, secondPoint, mousePoint);
+            
+            if (d <= LINE_CLICK_TOLERANCE) {
+                const minX: number = Math.min(firstPoint.x, secondPoint.x);
+                const maxX: number = Math.max(firstPoint.x, secondPoint.x);
+                const minY: number = Math.min(firstPoint.y, secondPoint.y);
+                const maxY: number = Math.max(firstPoint.y, secondPoint.y);
+                
+                if (mousePoint.x >= minX && mousePoint.x <= maxX && mousePoint.y >= minY && mousePoint.y <= maxY) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function updateText(newText: string): void {
+            const event: CustomEvent = new CustomEvent<string>('textUpdated', { detail: newText.toString() });
+            window.dispatchEvent(event);
+        }
+
+        function distToLine(firstPoint: Vector, secondPoint: Vector, mousePoint: Vector): number {
+            const lineVector = secondPoint.copy().sub(firstPoint.copy());
+            const pointVector = mousePoint.copy().sub(firstPoint.copy());
+            const crossProd = lineVector.cross(pointVector);
+            const crossProdMagnitude = crossProd.mag();
+            const lineMagnitude = lineVector.mag();
+        
+            return crossProdMagnitude / lineMagnitude;
+        }
+
+        window.addEventListener('colourChanged', function(event: Event) {
+            const customEvent: CustomEvent<string> = event as CustomEvent<string>;
+            NODE_COLOUR = customEvent.detail;
+            BG_COLOUR = adjustColor(NODE_COLOUR, 0.8);
+            NODE_BORDER_COLOUR = adjustColor(NODE_COLOUR, -0.4);
+        });
     };
 
     // Instantiate sketch
     new p5(sketch, containerId);
+}
+
+function adjustColor(hex: string, percent: number) {
+    hex = hex.replace('#', '');
+
+    let r = parseInt(hex.substring(0, 2), 16);
+    let g = parseInt(hex.substring(2, 4), 16);
+    let b = parseInt(hex.substring(4, 6), 16);
+
+    const adjust = (colorValue: number, percent: number) => {
+        return percent > 0 ? 
+            Math.min(255, colorValue + (255 - colorValue) * percent) :
+            Math.max(0, colorValue + colorValue * percent)
+    };
+
+    r = adjust(r, percent);
+    g = adjust(g, percent);
+    b = adjust(b, percent);
+
+    const newHex = `#${Math.round(r).toString(16).padStart(2, '0')}${Math.round(g).toString(16).padStart(2, '0')}${Math.round(b).toString(16).padStart(2, '0')}`;
+    
+    return newHex;
 }

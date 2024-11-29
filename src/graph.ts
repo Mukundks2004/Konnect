@@ -6,7 +6,7 @@ export class Graph {
     private edges: Set<string> = new Set();
     private weightedEdges: Set<Edge> = new Set();
   
-    printAll() {
+    printAll(): void {
         this.getEdges().forEach(element => {
             console.log("egde", element.node1Id, element.node2Id);
         });
@@ -16,6 +16,17 @@ export class Graph {
         console.log();
         console.log();
     }
+
+    toString(): string {
+        let finalString: string = "";
+        this.getNodes().forEach(node => {
+            finalString += node.id + "\n";
+        });
+        this.getEdges().forEach(edge => {
+            finalString += edge.node1Id + " " + edge.node2Id + "\n";
+        });
+        return finalString
+    } 
 
     addNode(node: GraphNode): void {
         console.log("Adding node: " + node.id);
