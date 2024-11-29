@@ -4,6 +4,19 @@ import { createSketch } from './sketch';
 const editor = ace.edit("textEditor");
 editor.setReadOnly(true);
 
+function downloadText() {
+	var content = editor.getValue();
+	
+	var blob = new Blob([content], { type: "text/plain" });
+	var link = document.createElement("a");
+	link.href = URL.createObjectURL(blob);
+	link.download = "myGraphData.txt";
+	
+	link.click();
+	
+	URL.revokeObjectURL(link.href);
+}
+
 const pathElement: SVGPathElement = <SVGPathElement>(<unknown>document.getElementById('iconPath'));
 
 const inputElement: HTMLInputElement | null = <HTMLInputElement>document.getElementById('colourSelector');
@@ -22,6 +35,22 @@ window.addEventListener('textUpdated', function(event: Event) {
 	editor.setValue(customEvent.detail);
 	editor.getSession().selection.clearSelection();
 });
+
+const saveImageButton = document.getElementById('saveImageButton') as HTMLButtonElement;
+
+if (saveImageButton) {
+	saveImageButton.addEventListener('click', () => {
+		window.dispatchEvent(new CustomEvent('saveImage'));
+	});
+}
+
+const downloadTextButton = document.getElementById('saveTextButton') as HTMLButtonElement;
+
+if (downloadTextButton) {
+	downloadTextButton.addEventListener('click', () => {
+		downloadText();
+	});
+}
 
 function openTab(evt: MouseEvent, tabName: string): void {
     let i: number;

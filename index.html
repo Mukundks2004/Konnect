@@ -89,15 +89,27 @@
 
             <div id="Config" class="tabcontent">
                 <h3>Config</h3>
-                <p>Customise your experience. Things you can customize:</p>
+                <p>Customise your experience!</p>
                 <ul>
-                    <input type="color" id="colourSelector">
-                    <li>Node size</li>
-                    <li>Ideal edge size</li>
-                    <li>Display num (checkbox)</li>
-                    <button>Export as png</button>
-                    <button>Export as txt</button>
-                    <button>Import txt</button>
+                    <li class="spaceElements">
+                        <span>
+                            Select Colour:
+                            <input type="color" id="colourSelector" value="#FFA500">
+                        </span>
+                    </li>
+                    <li class="spaceElements">Node size</li>
+                    <input type="range" min="3" max="20" value="3" step="1" id="nodeSizeDiv">
+                    <li class="spaceElements">Ideal edge size</li>
+                    <input type="range" min="200" max="600" value="300" step="100" id="edgeSizeDiv">
+                    <li class="spaceElements">
+                        <button id="saveImageButton" class="button-6">Export as png</button>
+                    </li>
+                    <li class="spaceElements">
+                        <button id="saveTextButton" class="button-6">Export as txt</button>
+                    </li>
+                    <li class="spaceElements">
+                        <button disabled class="button">Import txt</button>
+                    </li>
                 </ul>
             </div>
         </div>

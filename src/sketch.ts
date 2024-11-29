@@ -2,21 +2,20 @@ import { Vector } from "p5";
 import { Graph } from "./graph";
 import { GraphNode } from "./graphNode";
 
-const NODE_COUNT: number = 30;
-// const NODE_COUNT: number = 10;
-const CONNECTION_COUNT: number = 30;
-// const CONNECTION_COUNT: number = 10;
+const NODE_COUNT: number = 15;
+const CONNECTION_COUNT: number = 10;
+
 const GRAVITY_CONST: number = 1.3;
 const FORCE_CONSTANT: number = 800;
 const DO_NODE_MOVEMENT: boolean = true;
 const SKETCH_HEIGHT: number = 490;
 const SKETCH_WIDTH: number = 550;
 
-const DEFAULT_NODE_SIZE: number = 3;
+let DEFAULT_NODE_SIZE: number = 3;
 const LINE_THICKNESS: number = 2;
 
-const MIN_CON_LEN: number = 200;
-const MAX_CON_LEN: number = 400;
+let MIN_CON_LEN: number = 200;
+let MAX_CON_LEN: number = 400;
 
 const DRAG_MODE: string = "Drag";
 const DRAW_MODE: string = "Draw";
@@ -34,7 +33,6 @@ export function createSketch(containerId: HTMLElement) {
 
         let clicked: boolean = false;
         let selectedNode: GraphNode | null = null;
-        let selectedNodeNumber: number = -1;
         let nodeCreatedDuringThisClick: boolean = false;
 
         let NODE_COLOUR: string = '#FFA500';
@@ -58,10 +56,11 @@ export function createSketch(containerId: HTMLElement) {
             }
 
             // Generate sample connections
+            const allNodes = graph.getNodes();
             for (let n: number = 0; n < CONNECTION_COUNT; n++) {
                 graph.addEdge(
-                    Math.round(s.random(NODE_COUNT - 1)),
-                    Math.round(s.random(NODE_COUNT - 1)),
+                    allNodes[Math.round(s.random(NODE_COUNT - 1))],
+                    allNodes[Math.round(s.random(NODE_COUNT - 1))],
                     s.random(MIN_CON_LEN, MAX_CON_LEN))
             }
 
@@ -105,11 +104,12 @@ export function createSketch(containerId: HTMLElement) {
             }
 
             // Draw all connections
-            graph.getEdges().forEach(edge => {
-                const node1: GraphNode = graph.getNodeWithId(edge.node1Id);
-                const node2: GraphNode = graph.getNodeWithId(edge.node2Id);
-                s.line(node1.pos.x, node1.pos.y, node2.pos.x, node2.pos.y);
-            })
+            graph.getNodes().forEach((node) => {
+                const neighbours = graph.getNeighbors(node);
+                neighbours.forEach(([neighbor, _]) => {
+                    s.line(node.pos.x, node.pos.y, neighbor.pos.x, neighbor.pos.y);
+                });
+            });
 
             // Move all nodes
             adjustForceForNodes(allNodes);
@@ -132,23 +132,27 @@ export function createSketch(containerId: HTMLElement) {
                     case DELETE_MODE:
                         graph.getNodes().forEach((node) => {
                             if (s.dist(mousePos.x, mousePos.y, node.pos.x, node.pos.y) <= node.mass / 2) {
-                                selectedNodeNumber = node.id;
+                                selectedNode = node;
                                 return;
                             }
                         });
-                        if (selectedNodeNumber !== -1) {
-                            graph.removeNode(selectedNodeNumber);
+                        if (selectedNode !== null) {
+                            graph.removeNode(selectedNode);
                             updateText(graph.toString());
-                            selectedNodeNumber = -1;
+                            selectedNode = null;
                         }
 
-                        graph.getEdges().forEach((edge) => {
-                            if (isMouseOnLine(graph.getNodeWithId(edge.node1Id).pos, graph.getNodeWithId(edge.node2Id).pos, mousePos)) {
-                                graph.removeEdge(edge.node1Id, edge.node2Id);
-                                updateText(graph.toString());
-                                return;
-                            }
-                        })
+                        graph.getNodes().forEach((node) => {
+                            const neighbours = graph.getNeighbors(node);
+                            neighbours.forEach(([neighbor, _]) => {
+                                if (isMouseOnLine(node.pos, neighbor.pos, mousePos)) {
+                                    graph.removeEdge(node, neighbor);
+                                    updateText(graph.toString());
+                                    return;
+                                }
+                            });
+                        });
+                        
                         break;
                     case DRAW_MODE:
                     case DRAG_MODE:
@@ -161,7 +165,6 @@ export function createSketch(containerId: HTMLElement) {
                         graph.getNodes().forEach((node) => {
                             if (s.dist(mousePos.x, mousePos.y, node.pos.x, node.pos.y) <= node.mass / 2) {
                                 selectedNode = node;
-                                selectedNodeNumber = node.id;
                                 createNewNode = false;
                                 return;
                             }
@@ -171,7 +174,6 @@ export function createSketch(containerId: HTMLElement) {
                         if (createNewNode) {
                             nodeCreatedDuringThisClick = true;
                             selectedNode = new GraphNode(s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2), DEFAULT_NODE_SIZE);
-                            selectedNodeNumber = selectedNode.id;
                             graph.addNode(selectedNode);
                             updateText(graph.toString());
                         }
@@ -183,18 +185,19 @@ export function createSketch(containerId: HTMLElement) {
         s.mouseReleased = () => {
             // On release stop dragging node
             clicked = false;
-            selectedNode = null;
             nodeCreatedDuringThisClick = false;
 
             const mousePos: Vector = s.createVector(s.mouseX - s.width / 2, s.mouseY - s.height / 2);
             switch (globalThis.state) {
                 case DRAW_MODE:
                     graph.getNodes().forEach((node) => {
-                        if (s.dist(mousePos.x, mousePos.y, node.pos.x, node.pos.y) <= node.mass / 2 && selectedNodeNumber !== -1) {
-                            console.log("edge from " + selectedNodeNumber + " to " + node.id);
-                            graph.addEdge(selectedNodeNumber, node.id, s.random(MIN_CON_LEN, MAX_CON_LEN));
-                            updateText(graph.toString());
-                            return;
+                        if (s.dist(mousePos.x, mousePos.y, node.pos.x, node.pos.y) <= node.mass / 2 && selectedNode !== null) {
+                            console.log("edge from " + selectedNode.id + " to " + node.id);
+                            if (selectedNode !== null) {
+                                graph.addEdge(selectedNode, node, s.random(MIN_CON_LEN, MAX_CON_LEN));
+                                updateText(graph.toString());
+                                return;
+                            }
                         }
                     });
                 case DRAG_MODE:
@@ -204,8 +207,7 @@ export function createSketch(containerId: HTMLElement) {
                 default:
                     break;
             }
-
-            selectedNodeNumber = -1;
+            selectedNode = null;
         };
 
         const adjustForceForNodes = (nodes: GraphNode[]) => {
@@ -231,13 +233,14 @@ export function createSketch(containerId: HTMLElement) {
 
             // For each connection, add to the force each node feels by the distance from one to the other
             // Nodes far apart feel a strong force together, nodes close together feel a weak force
-            graph.getEdges().forEach(edge => {
-                const node1: GraphNode = graph.getNodeWithId(edge.node1Id);
-                const node2: GraphNode = graph.getNodeWithId(edge.node2Id);
-                const dis: Vector = node1.pos.copy().sub(node2.pos);
-                node1.force.sub(dis);
-                node2.force.add(dis);
-            })
+            graph.getNodes().forEach((node) => {
+                const neighbours = graph.getNeighbors(node);
+                neighbours.forEach(([neighbor, _]) => {
+                    const dis: Vector = node.pos.copy().sub(neighbor.pos);
+                    node.force.sub(dis);
+                    neighbor.force.add(dis);
+                });
+            });
         };
 
         function isMouseOnLine(firstPoint: Vector, secondPoint: Vector, mousePoint: Vector) {
@@ -262,14 +265,19 @@ export function createSketch(containerId: HTMLElement) {
         }
 
         function distToLine(firstPoint: Vector, secondPoint: Vector, mousePoint: Vector): number {
-            const lineVector = secondPoint.copy().sub(firstPoint.copy());
-            const pointVector = mousePoint.copy().sub(firstPoint.copy());
+            const lineVector = secondPoint.copy().sub(firstPoint);
+            const pointVector = mousePoint.copy().sub(firstPoint);
             const crossProd = lineVector.cross(pointVector);
             const crossProdMagnitude = crossProd.mag();
             const lineMagnitude = lineVector.mag();
         
             return crossProdMagnitude / lineMagnitude;
         }
+
+        window.addEventListener('saveImage', function(_: any) {
+            console.log("saving");
+            s.saveCanvas("MyGraph_" + Date.now(), "png");
+        });
 
         window.addEventListener('colourChanged', function(event: Event) {
             const customEvent: CustomEvent<string> = event as CustomEvent<string>;
