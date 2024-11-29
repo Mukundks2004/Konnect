@@ -6,7 +6,19 @@ export class Graph {
     private edges: Set<string> = new Set();
     private weightedEdges: Set<Edge> = new Set();
   
+    printAll() {
+        this.getEdges().forEach(element => {
+            console.log("egde", element.node1Id, element.node2Id);
+        });
+        this.getNodes().forEach(element => {
+            console.log("node", element.id);
+        });
+        console.log();
+        console.log();
+    }
+
     addNode(node: GraphNode): void {
+        console.log("Adding node: " + node.id);
         if (!this.nodes.has(node.id)) {
             this.nodes.set(node.id, node);
         }
@@ -25,6 +37,7 @@ export class Graph {
     }
   
     addEdge(node1Id: number, node2Id: number, idealLength: number): void {
+        console.log("Adding edge: " + node1Id + " to " + node2Id);
         if (this.nodes.has(node1Id) && this.nodes.has(node2Id) && node1Id !== node2Id) {
             const edge: Edge = { node1Id, node2Id, idealLength };
             const sortedEdge = node1Id < node2Id ? `${node1Id}-${node2Id}` : `${node2Id}-${node1Id}`;
@@ -58,5 +71,13 @@ export class Graph {
     
     getEdges(): Edge[] {
         return Array.from(this.weightedEdges);
+    }
+
+    getNodeWithId(id: number): GraphNode {
+        const node: GraphNode | undefined = this.nodes.get(id);
+        if (node === undefined) {
+            throw "Node not found: " + id;
+        }
+        return node;
     }
 }

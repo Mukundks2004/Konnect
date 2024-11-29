@@ -1,7 +1,4 @@
 import '../styles/styles.css';
-// import { createSketch } from './sketch';
-
-
 import { createSketch } from './translatedForceTest';
 
 const other = ace.edit("textEditor");
