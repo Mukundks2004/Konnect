@@ -29,7 +29,7 @@ export function createSketch(containerId: HTMLElement) {
     const sketch = (s: typeof p5) => {
 
         // Initialize graph
-        const graph: Graph = new Graph();
+        let graph: Graph = new Graph();
 
         let clicked: boolean = false;
         let selectedNode: GraphNode | null = null;
@@ -240,6 +240,10 @@ export function createSketch(containerId: HTMLElement) {
                     node.force.sub(dis);
                     neighbor.force.add(dis);
                 });
+
+                // const diff = dis.mag() - weight
+                // node.force.sub(dis.mult(diff/dis.mag()))
+                // neighbor.force.sub(dis.mult(diff/dis.mag()))
             });
         };
 
@@ -277,6 +281,41 @@ export function createSketch(containerId: HTMLElement) {
         window.addEventListener('saveImage', function(_: any) {
             console.log("saving");
             s.saveCanvas("MyGraph_" + Date.now(), "png");
+        });
+
+        window.addEventListener('clearGraph', function(_: any) {
+            graph = new Graph();
+        });
+
+        window.addEventListener('randomGraph', function(_: any) {
+            graph = new Graph();
+
+            for (let i: number = 0; i < NODE_COUNT; i++) {
+                const x: number = s.random(-SKETCH_WIDTH / 4, SKETCH_WIDTH / 4);
+                const y: number = s.random(-SKETCH_HEIGHT / 4, SKETCH_HEIGHT / 4);
+                const node: GraphNode = new GraphNode(s.createVector(x, y), DEFAULT_NODE_SIZE);
+                graph.addNode(node);
+            }
+
+            const allNodes = graph.getNodes();
+            for (let n: number = 0; n < CONNECTION_COUNT; n++) {
+                graph.addEdge(
+                    allNodes[Math.round(s.random(NODE_COUNT - 1))],
+                    allNodes[Math.round(s.random(NODE_COUNT - 1))],
+                    s.random(MIN_CON_LEN, MAX_CON_LEN))
+            }
+        });
+
+        window.addEventListener('newNodeSize', function(event: Event) {
+            const customEvent: CustomEvent<string> = event as CustomEvent<string>;
+            DEFAULT_NODE_SIZE = +customEvent.detail;
+            console.log(DEFAULT_NODE_SIZE);
+        });
+
+        window.addEventListener('newEdgeSize', function(event: Event) {
+            const customEvent: CustomEvent<string> = event as CustomEvent<string>;
+            MAX_CON_LEN = +customEvent.detail;
+            MIN_CON_LEN = +customEvent.detail;
         });
 
         window.addEventListener('colourChanged', function(event: Event) {

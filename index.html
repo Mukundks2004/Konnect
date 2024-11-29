@@ -48,7 +48,6 @@
                 <ul>
                     <li>Add nodes by clicking the canvas</li>
                     <li>Add edges by dragging between nodes</li>
-                    <li>potentially path mode</li>
                 </ul> 
             </div>
             
@@ -58,16 +57,18 @@
                 <ul>
                     <li>Remove nodes by clicking, on mouse down</li>
                     <li>Remove edges by removing either node or clicking the edge</li>
-                    <li>Click a button to remove everything</li>
-                    <li>Just remove all edges</li>
-                    <button>Clear it all</button>
-                    <button>Generate a random medium sized graph</button>
+                    <li class="spaceElements">
+                        <button class="button-6" id="clearButton">Clear it all</button>
+                    </li>
+                    <li class="spaceElements">
+                        <button class="button-6" id="randomButton">Random Graph</button>
+                    </li>
                 </ul>
             </div>
 
             <div id="Attributes" class="tabcontent">
                 <h3>Attributes</h3>
-                <p>Analyse your graph quantitatively. Features this will support:</p>
+                <p>Analyse your graph quantitatively:</p>
                 <ul>
                     <li>Whether the graph has cycles, and the shortest cycle (girth) (download as txt)</li>
                     <li>Whether the graph is connected</li>
@@ -82,8 +83,12 @@
                     <li># of loose nodes, total nodes and edges</li>
                     <li>Radius (min eccentricity)</li>
                     <li>Diameter (max eccentricity)</li>
-                    <button>Download minimum spanning tree as txt</button>
-                    <button>Download list of eccentricities as txt</button>
+                    <li class="spaceElements">
+                        <button>Download minimum spanning tree as txt</button>
+                    </li>
+                    <li class="spaceElements">
+                        <button>Download list of eccentricities as txt</button>
+                    </li>
                 </ul>
             </div>
 
@@ -98,9 +103,9 @@
                         </span>
                     </li>
                     <li class="spaceElements">Node size</li>
-                    <input type="range" min="3" max="20" value="3" step="1" id="nodeSizeDiv">
+                    <input type="range" min="3" max="5" value="3" step="1" id="nodeSizeElement">
                     <li class="spaceElements">Ideal edge size</li>
-                    <input type="range" min="200" max="600" value="300" step="100" id="edgeSizeDiv">
+                    <input type="range" min="200" max="600" value="300" step="100" id="edgeSizeElement" disabled>
                     <li class="spaceElements">
                         <button id="saveImageButton" class="button-6">Export as png</button>
                     </li>
