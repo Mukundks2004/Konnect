@@ -1,7 +1,7 @@
 import { Vector } from "p5";
 import { Graph } from "./graph";
 import { GraphNode } from "./graphNode";
-import { isGraphComplete, isGraphConnected, findShortestCycle } from "./graphUtilities";
+import { isGraphComplete, isGraphConnected, findShortestCycle, nodeCount, edgeCount } from "./graphUtilities";
 
 const NODE_COUNT: number = 15;
 const CONNECTION_COUNT: number = 12;
@@ -286,6 +286,8 @@ export function createSketch(containerId: HTMLElement) {
             data.set('IsConnected', isGraphConnected(graph).toString());
             data.set('IsComplete', isGraphComplete(graph).toString());
             data.set('ShortestCycle', findShortestCycle(graph).toString());
+            data.set('NodeCount', nodeCount(graph).toString());
+            data.set('EdgeCount', edgeCount(graph).toString());
 
             console.log("Dispatching event with data: ", data);
 

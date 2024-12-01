@@ -44,6 +44,8 @@ window.addEventListener('sendGraphAttributes', function(event: Event) {
 	const planarDiv = document.getElementById("planarValue");
 	const treeDiv = document.getElementById("treeValue");
 	const forestDiv = document.getElementById("forestValue");
+	const nodeCountDiv = document.getElementById("totalNodesValue");
+	const edgeCountDiv = document.getElementById("totalEdgesValue");
 
 	if (cyclicDiv) {
 		const result = customEvent.detail.get("ShortestCycle");
@@ -66,6 +68,20 @@ window.addEventListener('sendGraphAttributes', function(event: Event) {
 		const result = customEvent.detail.get("IsComplete");
 		if (result) {
 			completeDiv.innerHTML = result === "true" ? "Yes" : "No";
+		}
+	}
+
+	if (nodeCountDiv) {
+		const result = customEvent.detail.get("NodeCount");
+		if (result) {
+			nodeCountDiv.innerHTML = result;
+		}
+	}
+
+	if (edgeCountDiv) {
+		const result = customEvent.detail.get("EdgeCount");
+		if (result) {
+			edgeCountDiv.innerHTML = result;
 		}
 	}
 });

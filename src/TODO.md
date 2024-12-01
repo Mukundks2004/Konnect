@@ -12,3 +12,5 @@
     - Undirected
     - Get all nodes
     - Get all edges
+
+Enable path mode by clicking on a node, exit this mode by clicking on a node selected in path mode
