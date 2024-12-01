@@ -11,7 +11,7 @@ html, body {
   display: flex;
   padding: 100px 20px 20px 20px;
   width: 95%;
-  height: 520px;
+  height: 670px;
 }
 
 .box {
@@ -145,4 +145,37 @@ html, body {
 
 .spaceElements {
   margin: 10px 10px 10px 0px;
+}
+
+.styled-table {
+  margin: auto;
+  font-size: 14px;
+  border-radius: 10px;
+  overflow: hidden;
+  border-collapse: collapse;
+  font-family: sans-serif;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+
+.styled-table thead tr {
+  background-color: #6b6b6b;
+  color: #ffffff;
+  text-align: left;
+}
+
+.styled-table th,
+.styled-table td {
+    padding: 5px 15px;
+}
+
+.styled-table tbody tr {
+  border-bottom: 1px solid #dddddd;
+}
+
+.styled-table tbody tr:nth-of-type(even) {
+  background-color: #f3f3f3;
+}
+
+.styled-table tbody tr:nth-of-type(odd) {
+  background-color: #c4c4c4;
 }

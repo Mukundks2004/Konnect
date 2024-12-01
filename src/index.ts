@@ -36,6 +36,40 @@ window.addEventListener('textUpdated', function(event: Event) {
 	editor.getSession().selection.clearSelection();
 });
 
+window.addEventListener('sendGraphAttributes', function(event: Event) {
+	const customEvent: CustomEvent<Map<string, string>> = event as CustomEvent<Map<string, string>>;
+	const cyclicDiv = document.getElementById("cyclicValue");
+	const connectedDiv = document.getElementById("connectedValue");
+	const completeDiv = document.getElementById("completeValue");
+	const planarDiv = document.getElementById("planarValue");
+	const treeDiv = document.getElementById("treeValue");
+	const forestDiv = document.getElementById("forestValue");
+
+	if (cyclicDiv) {
+		const result = customEvent.detail.get("ShortestCycle");
+		if (result === "-1") {
+			cyclicDiv.innerHTML = "No";
+		}
+		else if (result) {
+			cyclicDiv.innerHTML = result;
+		}
+	}
+
+	if (connectedDiv) {
+		const result = customEvent.detail.get("IsConnected");
+		if (result) {
+			connectedDiv.innerHTML = result === "true" ? "Yes" : "No";
+		}
+	}
+
+	if (completeDiv) {
+		const result = customEvent.detail.get("IsComplete");
+		if (result) {
+			completeDiv.innerHTML = result === "true" ? "Yes" : "No";
+		}
+	}
+});
+
 const saveImageButton = document.getElementById('saveImageButton') as HTMLButtonElement;
 
 if (saveImageButton) {
@@ -108,6 +142,12 @@ function openTab(evt: MouseEvent, tabName: string): void {
     }
   
     (evt.currentTarget as HTMLElement).className += " active";
+
+	if (tabName === "Attributes") {
+		console.log("Changing to attributes, pulling data");
+		const event: CustomEvent = new CustomEvent('getGraphAttributes');
+        window.dispatchEvent(event);
+	}
 }
   
   (window as any).openTab = openTab;

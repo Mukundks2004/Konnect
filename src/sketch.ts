@@ -1,14 +1,15 @@
 import { Vector } from "p5";
 import { Graph } from "./graph";
 import { GraphNode } from "./graphNode";
+import { isGraphComplete, isGraphConnected, findShortestCycle } from "./graphUtilities";
 
 const NODE_COUNT: number = 15;
-const CONNECTION_COUNT: number = 10;
+const CONNECTION_COUNT: number = 12;
 
-const GRAVITY_CONST: number = 1.3;
-const FORCE_CONSTANT: number = 800;
+const GRAVITY_CONST: number = 0.8;
+const FORCE_CONSTANT: number = 1200;
 const DO_NODE_MOVEMENT: boolean = true;
-const SKETCH_HEIGHT: number = 490;
+const SKETCH_HEIGHT: number = 640;
 const SKETCH_WIDTH: number = 550;
 
 let DEFAULT_NODE_SIZE: number = 3;
@@ -45,7 +46,6 @@ export function createSketch(containerId: HTMLElement) {
 
             BG_COLOUR = adjustColor(NODE_COLOUR, 0.8);
             NODE_BORDER_COLOUR = adjustColor(NODE_COLOUR, -0.4);
-            console.log(BG_COLOUR, NODE_BORDER_COLOUR);
 
             // Fill board with some nodes
             for (let i: number = 0; i < NODE_COUNT; i++) {
@@ -106,7 +106,7 @@ export function createSketch(containerId: HTMLElement) {
             // Draw all connections
             graph.getNodes().forEach((node) => {
                 const neighbours = graph.getNeighbors(node);
-                neighbours.forEach(([neighbor, _]) => {
+                neighbours.forEach((neighbor) => {
                     s.line(node.pos.x, node.pos.y, neighbor.pos.x, neighbor.pos.y);
                 });
             });
@@ -144,7 +144,7 @@ export function createSketch(containerId: HTMLElement) {
 
                         graph.getNodes().forEach((node) => {
                             const neighbours = graph.getNeighbors(node);
-                            neighbours.forEach(([neighbor, _]) => {
+                            neighbours.forEach((neighbor) => {
                                 if (isMouseOnLine(node.pos, neighbor.pos, mousePos)) {
                                     graph.removeEdge(node, neighbor);
                                     updateText(graph.toString());
@@ -192,7 +192,6 @@ export function createSketch(containerId: HTMLElement) {
                 case DRAW_MODE:
                     graph.getNodes().forEach((node) => {
                         if (s.dist(mousePos.x, mousePos.y, node.pos.x, node.pos.y) <= node.mass / 2 && selectedNode !== null) {
-                            console.log("edge from " + selectedNode.id + " to " + node.id);
                             if (selectedNode !== null) {
                                 graph.addEdge(selectedNode, node, s.random(MIN_CON_LEN, MAX_CON_LEN));
                                 updateText(graph.toString());
@@ -235,7 +234,7 @@ export function createSketch(containerId: HTMLElement) {
             // Nodes far apart feel a strong force together, nodes close together feel a weak force
             graph.getNodes().forEach((node) => {
                 const neighbours = graph.getNeighbors(node);
-                neighbours.forEach(([neighbor, _]) => {
+                neighbours.forEach((neighbor) => {
                     const dis: Vector = node.pos.copy().sub(neighbor.pos);
                     node.force.sub(dis);
                     neighbor.force.add(dis);
@@ -266,6 +265,9 @@ export function createSketch(containerId: HTMLElement) {
         function updateText(newText: string): void {
             const event: CustomEvent = new CustomEvent<string>('textUpdated', { detail: newText.toString() });
             window.dispatchEvent(event);
+            if (globalThis.state === ATTRIBUTES_MODE) {
+                sendGraphAttributes();
+            }
         }
 
         function distToLine(firstPoint: Vector, secondPoint: Vector, mousePoint: Vector): number {
@@ -276,6 +278,19 @@ export function createSketch(containerId: HTMLElement) {
             const lineMagnitude = lineVector.mag();
         
             return crossProdMagnitude / lineMagnitude;
+        }
+
+        function sendGraphAttributes(): void {
+            const data: Map<string, string> = new Map();
+
+            data.set('IsConnected', isGraphConnected(graph).toString());
+            data.set('IsComplete', isGraphComplete(graph).toString());
+            data.set('ShortestCycle', findShortestCycle(graph).toString());
+
+            console.log("Dispatching event with data: ", data);
+
+            const event: CustomEvent = new CustomEvent<Map<string, string>>('sendGraphAttributes', { detail: data });
+            window.dispatchEvent(event);
         }
 
         window.addEventListener('saveImage', function(_: any) {
@@ -309,7 +324,10 @@ export function createSketch(containerId: HTMLElement) {
         window.addEventListener('newNodeSize', function(event: Event) {
             const customEvent: CustomEvent<string> = event as CustomEvent<string>;
             DEFAULT_NODE_SIZE = +customEvent.detail;
-            console.log(DEFAULT_NODE_SIZE);
+        });
+
+        window.addEventListener('getGraphAttributes', function(event: Event) {
+            sendGraphAttributes();
         });
 
         window.addEventListener('newEdgeSize', function(event: Event) {

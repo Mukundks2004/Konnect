@@ -1,26 +1,31 @@
 import { Graph } from "graph";
 import { GraphNode } from "graphNode";
 
-export function isGraphConnected(graph: Graph) {
+export function isGraphConnected(graph: Graph): boolean {
+    if (graph.getNumberOfNodes() === 1) {
+        return true;
+    }
+    let result: boolean = true;
     graph.getNodes().forEach(node => {
         if (graph.getNeighbors(node).length == 0) {
-            return false;
+            result = false;
+            return;
         }
-        return true;
     });
+    return result;
 }
 
-export function isGraphComplete(graph: Graph) {
+export function isGraphComplete(graph: Graph): boolean {
     const size = graph.getNumberOfNodes();
+    let result: boolean = true;
     graph.getNodes().forEach(node => {
         if (graph.getNeighbors(node).length !== size - 1) {
-            return false;
+            result = false;
         }
-        return true;
     });
+    return result;
 }
 
-// This is untested!
 export function findShortestCycle(graph: Graph): number {
     let minCycleLength = Infinity;
 
@@ -37,13 +42,13 @@ export function findShortestCycle(graph: Graph): number {
         while (queue.length > 0) {
             const [currentNode, currentParent, currentDist] = queue.shift()!;
             for (let neighbor of graph.getNeighbors(currentNode!)) {
-                if (!visited.has(neighbor[0])) {
-                    visited.set(neighbor[0], true);
-                    distance.set(neighbor[0], currentDist + 1);
-                    parent.set(neighbor[0], currentNode);
-                    queue.push([neighbor[0], currentNode, currentDist + 1]);
-                } else if (neighbor[0] !== currentParent) {
-                    const cycleLength = currentDist + 1 + distance.get(neighbor[0])!;
+                if (!visited.has(neighbor)) {
+                    visited.set(neighbor, true);
+                    distance.set(neighbor, currentDist + 1);
+                    parent.set(neighbor, currentNode);
+                    queue.push([neighbor, currentNode, currentDist + 1]);
+                } else if (neighbor !== currentParent) {
+                    const cycleLength = currentDist + 1 + distance.get(neighbor)!;
                     minCycleLength = Math.min(minCycleLength, cycleLength);
                 }
             }
