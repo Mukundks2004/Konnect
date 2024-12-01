@@ -26,6 +26,19 @@ export function isGraphComplete(graph: Graph): boolean {
     return result;
 }
 
+export function nodeCount(graph: Graph): number {
+    return graph.getNumberOfNodes();
+}
+
+export function edgeCount(graph: Graph): number {
+    let count = 0;
+    graph.getNodes().forEach((node) => {
+        count += graph.getNeighbors(node).length;
+    })
+
+    return count / 2;
+}
+
 export function findShortestCycle(graph: Graph): number {
     let minCycleLength = Infinity;
 
