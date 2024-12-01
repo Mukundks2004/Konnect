@@ -1,12 +1,12 @@
 name: Deploy to GitHub Pages
 
 on:
-  # push:
-  #   branches:
-  #     - main  # Trigger the action only when pushing to the main branch
-  pull_request:
+  push:
     branches:
       - deployment
+  # pull_request:
+  #   branches:
+  #     - deployment
 
 jobs:
   deploy:
@@ -38,9 +38,9 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          branch: gh-pages  # The branch we are deploying to
-          folder: dist  # Folder containing the static files to be deployed
-          clean: true  # Clean up the old files on the gh-pages branch
+          branch: gh-pages
+          folder: dist
+          clean: true
           
       # - name: Commit and push the changes
       #   run: |
