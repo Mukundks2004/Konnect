@@ -1,15 +1,15 @@
 import { GraphNode } from "./graphNode";
 
-//Optimise this entire thing, have just the edges and the adjacency list
 export class Graph {
-    private adjacencyList: Map<GraphNode, Set<[GraphNode, number]>> = new Map();
+    // private adjacencyList: Map<GraphNode, Set<[GraphNode, number]>> = new Map();
+    private adjacencyList: Map<GraphNode, Map<GraphNode, number>> = new Map();
 
     toString(): string {
         let finalString: string = "";
         this.getNodes().forEach(node => {
             finalString += node.id + "\n";
             this.getNeighbors(node).forEach(element => {
-                finalString += node.id + " " + element[0].id + "\n";
+                finalString += node.id + " " + element.id + "\n";
             });
         });
 
@@ -17,9 +17,8 @@ export class Graph {
     } 
 
     addNode(node: GraphNode): void {
-        console.log("Adding node: " + node.id);
         if (!this.adjacencyList.has(node)) {
-            this.adjacencyList.set(node, new Set());
+            this.adjacencyList.set(node, new Map());
         }
     }
   
@@ -27,13 +26,11 @@ export class Graph {
         if (this.adjacencyList.has(node)) {
             this.adjacencyList.delete(node);
     
-            for (let [key, neighbors] of this.adjacencyList) {
-                for (let neighbor of neighbors) {
-                    const [neighborNode, weight] = neighbor;
+            for (let key of this.adjacencyList.keys()) {
+                for (let neighbor of Array.from(this.adjacencyList.get(key)?.keys() ?? [])) {
                     
-                    if (neighborNode === node) {
-                        console.log("Deleting edge between: " + key.id + " and " + node.id);
-                        neighbors.delete(neighbor);
+                    if (neighbor === node) {
+                        this.adjacencyList.get(key)?.delete(neighbor);
                         break;
                     }
                 }
@@ -41,22 +38,25 @@ export class Graph {
         }
     }
   
-    addEdge(node1: GraphNode, node2: GraphNode, idealLength: number): void {
-        console.log("Adding edge: " + node1.id + " to " + node2.id);
-        this.addNode(node1);
-        this.addNode(node2);
-
-        this.adjacencyList.get(node1)?.add([node2, idealLength]);
-        this.adjacencyList.get(node2)?.add([node1, idealLength]);
+    addEdge(node1: GraphNode, node2: GraphNode, weight: number): void {
+        if (node1 === node2) {
+            return;
+        }
+        if (!this.adjacencyList.get(node1)?.has(node2)) {
+            this.addNode(node1);
+            this.addNode(node2);
+    
+            this.adjacencyList.get(node1)?.set(node2, weight);
+            this.adjacencyList.get(node2)?.set(node1, weight);
+        }
     }
   
     removeEdge(node1: GraphNode, node2: GraphNode): void {
         if (this.adjacencyList.has(node1)) {
             const neighborsFrom = this.adjacencyList.get(node1)!;
 
-            for (let neighbor of neighborsFrom) {
-                const [neighborNode, weight] = neighbor;
-                if (neighborNode === node2) {
+            for (let neighbor of neighborsFrom.keys()) {
+                if (neighbor === node2) {
                     neighborsFrom.delete(neighbor);
                     break;
                 }
@@ -64,12 +64,11 @@ export class Graph {
         }
 
         if (this.adjacencyList.has(node2)) {
-            const neighborsTo = this.adjacencyList.get(node2)!;
+            const neighborsFrom = this.adjacencyList.get(node2)!;
 
-            for (let neighbor of neighborsTo) {
-                const [neighborNode, weight] = neighbor;
-                if (neighborNode === node1) {
-                    neighborsTo.delete(neighbor);
+            for (let neighbor of neighborsFrom.keys()) {
+                if (neighbor === node1) {
+                    neighborsFrom.delete(neighbor);
                     break;
                 }
             }
@@ -84,12 +83,12 @@ export class Graph {
                     return true;
                 }
             }
-            }
+        }
         return false;
       }
 
-    getNeighbors(node: GraphNode): [GraphNode, number][] {
-        return Array.from(this.adjacencyList.get(node) || []);
+    getNeighbors(node: GraphNode): GraphNode[] {
+        return Array.from(this.adjacencyList.get(node)?.keys() || []);
     }
   
     getNodes(): GraphNode[] {
